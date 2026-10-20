@@ -6,10 +6,12 @@ BUILD_DIR := build
 BIN_DIR := bin
 
 TARGET := $(BIN_DIR)/courier_tracker
-SRCS := $(SRC_DIR)/main.cpp $(SRC_DIR)/ParcelManager.cpp
+SRCS := $(SRC_DIR)/main.cpp $(SRC_DIR)/ParcelManager.cpp $(SRC_DIR)/WebServer.cpp
 OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SRCS))
 
-.PHONY: all clean run single test
+PORT ?= 5000
+
+.PHONY: all clean run web single test
 
 all: $(TARGET)
 
@@ -32,8 +34,12 @@ single: courier_tracker.cpp | $(BIN_DIR)
 run: all
 	./$(TARGET)
 
+web: all
+	./$(TARGET) --web $(PORT)
+
 test: all
 	bash tests/test_demo.sh
+	bash tests/test_web.sh
 
 clean:
 	rm -rf $(BUILD_DIR) $(BIN_DIR)

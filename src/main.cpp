@@ -1,4 +1,5 @@
 #include "../include/ParcelManager.h"
+#include "../include/WebServer.h"
 #include <iostream>
 #include <string>
 #include <limits>
@@ -15,7 +16,6 @@ std::string promptString(const std::string& prompt, bool allowEmpty = false) {
         std::getline(std::cin, input);
         input = ParcelManager::trim(input);
         if (allowEmpty || !input.empty()) {
-            // Check for illegal pipe character
             if (input.find('|') != std::string::npos) {
                 std::cout << " [!] Error: The pipe character '|' is reserved as a file delimiter. Please re-enter.\n";
                 continue;
@@ -43,9 +43,10 @@ void printMenu() {
     std::cout << " 6. Display All Records\n";
     std::cout << " 7. Run Search Benchmark (Empirical Complexity Analysis)\n";
     std::cout << " 8. Save & Reload Records\n";
-    std::cout << " 9. Exit\n";
+    std::cout << " 9. Launch Web Server Mode (http://localhost:5000)\n";
+    std::cout << " 10. Exit\n";
     std::cout << "------------------------------------------------------------------------\n";
-    std::cout << "Enter your choice (1-9): ";
+    std::cout << "Enter your choice (1-10): ";
 }
 
 void handleRegister(ParcelManager& manager) {
@@ -256,8 +257,37 @@ void handleReload(ParcelManager& manager) {
     }
 }
 
-int main() {
+int main(int argc, char* argv[]) {
     ParcelManager manager("parcels.txt");
+    int port = 5000;
+    bool webMode = false;
+
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "--web" || arg == "-w" || arg == "--serve") {
+            webMode = true;
+            if (i + 1 < argc && argv[i + 1][0] != '-') {
+                port = std::stoi(argv[++i]);
+            }
+        } else if (arg == "--port" && i + 1 < argc) {
+            port = std::stoi(argv[++i]);
+            webMode = true;
+        } else if (arg == "--help" || arg == "-h") {
+            std::cout << "Usage: ./courier_tracker [OPTIONS]\n"
+                      << "  --web, -w [port]    Launch native C++ web server (default: 5000)\n"
+                      << "  --port [port]       Specify web server port\n"
+                      << "  --cli               Launch interactive CLI menu\n"
+                      << "  --help, -h          Show this help message\n";
+            return 0;
+        }
+    }
+
+    if (webMode) {
+        WebServer server(manager, port, "web");
+        server.start();
+        return 0;
+    }
+
     printHeader();
     std::cout << " Loaded " << manager.count() << " parcel records from persistent storage (parcels.txt).\n";
 
@@ -267,7 +297,7 @@ int main() {
         int choice = 0;
         if (!(std::cin >> choice)) {
             clearInputBuffer();
-            std::cout << " [!] Please enter a valid number from 1 to 9.\n";
+            std::cout << " [!] Please enter a valid number from 1 to 10.\n";
             continue;
         }
         clearInputBuffer();
@@ -281,13 +311,18 @@ int main() {
             case 6: handleDisplayAll(manager); break;
             case 7: handleBenchmark(manager); break;
             case 8: handleReload(manager); break;
-            case 9:
+            case 9: {
+                WebServer server(manager, port, "web");
+                server.start();
+                break;
+            }
+            case 10:
                 manager.saveRecords();
                 std::cout << "\nAll records saved to 'parcels.txt'. Exiting Courier Parcel Manager. Goodbye!\n\n";
                 running = false;
                 break;
             default:
-                std::cout << " [!] Invalid option. Please choose between 1 and 9.\n";
+                std::cout << " [!] Invalid option. Please choose between 1 and 10.\n";
                 break;
         }
     }

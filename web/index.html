@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Courier Parcel Tracking & Dispatch System</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="logo-badge">📦</div>
+        <div>
+          <h1>Courier Parcel Tracking & Dispatch</h1>
+          <p class="subtitle">C++ Data Structures Core &bull; Vector + Hash Index &bull; MergeSort</p>
+        </div>
+      </div>
+      <div class="header-status">
+        <span class="status-indicator live"></span>
+        <span id="backendStatus">C++ Engine Active</span>
+        <span class="badge" id="recordCountBadge">0 Parcels</span>
+      </div>
+    </header>
+
+    <!-- Metrics Dashboard -->
+    <section class="stats-grid" aria-label="System Metrics">
+      <div class="stat-card">
+        <div class="stat-icon total">📦</div>
+        <div class="stat-info">
+          <span class="stat-label">Total Parcels</span>
+          <span class="stat-value" id="statTotal">0</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon pending">⏳</div>
+        <div class="stat-info">
+          <span class="stat-label">Pending Dispatch</span>
+          <span class="stat-value" id="statPending">0</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon transit">🚚</div>
+        <div class="stat-info">
+          <span class="stat-label">In Transit</span>
+          <span class="stat-value" id="statTransit">0</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon delivered">✅</div>
+        <div class="stat-info">
+          <span class="stat-label">Delivered</span>
+          <span class="stat-value" id="statDelivered">0</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Search & Algorithm Comparison Section -->
+    <section class="search-section" aria-labelledby="search-heading">
+      <div class="section-header">
+        <h2 id="search-heading">🔍 Tracking ID Search & Algorithm Comparison</h2>
+        <span class="algo-pill">Sequential Search O(N) vs Hash Lookup O(1)</span>
+      </div>
+      <div class="search-bar-wrapper">
+        <form id="searchForm" class="search-form" onsubmit="return false;">
+          <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="Enter Tracking ID (e.g. CR101)..." 
+            aria-label="Tracking ID" 
+            required 
+          />
+          <button type="submit" id="searchBtn" class="btn btn-primary">Track Parcel</button>
+        </form>
+        <div class="quick-tags">
+          <span>Quick Try:</span>
+          <button type="button" class="tag-btn" onclick="quickSearch('CR101')">CR101</button>
+          <button type="button" class="tag-btn" onclick="quickSearch('CR102')">CR102</button>
+          <button type="button" class="tag-btn" onclick="quickSearch('CR103')">CR103</button>
+          <button type="button" class="tag-btn" onclick="quickSearch('CR104')">CR104</button>
+          <button type="button" class="tag-btn" onclick="quickSearch('CR105')">CR105</button>
+        </div>
+      </div>
+
+      <!-- Live Search Results & Complexity Box -->
+      <div id="searchResultContainer" class="search-results hidden">
+        <div class="comparison-card">
+          <h3>Algorithm Performance Comparison for <span id="resTrackingId" class="code-span">CR101</span></h3>
+          <div class="comparison-grid">
+            <div class="algo-box sequential">
+              <div class="algo-title">
+                <span class="algo-name">Sequential Search</span>
+                <span class="complexity-badge">O(N)</span>
+              </div>
+              <div class="algo-stats">
+                <div class="stat-item">
+                  <span class="label">Steps Checked</span>
+                  <span class="val" id="resSeqSteps">-</span>
+                </div>
+                <div class="stat-item">
+                  <span class="label">Time Elapsed</span>
+                  <span class="val" id="resSeqTime">-</span>
+                </div>
+              </div>
+              <p class="algo-note">Scans elements sequentially until match.</p>
+            </div>
+
+            <div class="algo-box hash">
+              <div class="algo-title">
+                <span class="algo-name">Hash-Based Lookup</span>
+                <span class="complexity-badge best">O(1) avg</span>
+              </div>
+              <div class="algo-stats">
+                <div class="stat-item">
+                  <span class="label">Hash Operations</span>
+                  <span class="val" id="resHashSteps">1 step</span>
+                </div>
+                <div class="stat-item">
+                  <span class="label">Time Elapsed</span>
+                  <span class="val" id="resHashTime">-</span>
+                </div>
+              </div>
+              <p class="algo-note">Instant bucket lookup via unordered_map.</p>
+            </div>
+          </div>
+          <div id="speedupBanner" class="speedup-banner">
+            ⚡ Hash Lookup is <strong id="speedupVal">0x</strong> faster for this query!
+          </div>
+        </div>
+
+        <!-- Parcel Detail Card & Lifecycle Tracker -->
+        <div id="parcelCard" class="parcel-card">
+          <div class="parcel-card-header">
+            <div>
+              <span class="tracking-title" id="cardTrackingId">CR101</span>
+              <span class="badge status-badge" id="cardStatusBadge">Registered</span>
+            </div>
+            <button type="button" class="btn btn-outline-sm" onclick="openUpdateModalForCurrent()">Update Status</button>
+          </div>
+
+          <!-- Visual Lifecycle Stepper -->
+          <div class="stepper" id="lifecycleStepper">
+            <div class="step" data-step="Registered">
+              <div class="circle">1</div>
+              <div class="step-label">Registered</div>
+            </div>
+            <div class="line"></div>
+            <div class="step" data-step="Dispatched">
+              <div class="circle">2</div>
+              <div class="step-label">Dispatched</div>
+            </div>
+            <div class="line"></div>
+            <div class="step" data-step="In Transit">
+              <div class="circle">3</div>
+              <div class="step-label">In Transit</div>
+            </div>
+            <div class="line"></div>
+            <div class="step" data-step="Delivered">
+              <div class="circle">4</div>
+              <div class="step-label">Delivered</div>
+            </div>
+          </div>
+
+          <div class="parcel-details-grid">
+            <div class="detail-group">
+              <span class="detail-label">Sender</span>
+              <span class="detail-val" id="cardSender">-</span>
+            </div>
+            <div class="detail-group">
+              <span class="detail-label">Recipient</span>
+              <span class="detail-val" id="cardRecipient">-</span>
+            </div>
+            <div class="detail-group">
+              <span class="detail-label">Destination</span>
+              <span class="detail-val" id="cardDestination">-</span>
+            </div>
+            <div class="detail-group">
+              <span class="detail-label">Registration Date</span>
+              <span class="detail-val" id="cardRegDate">-</span>
+            </div>
+            <div class="detail-group">
+              <span class="detail-label">Dispatch Date</span>
+              <span class="detail-val" id="cardDispDate">-</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Parcel Management & Table -->
+    <main class="registry-section">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <h2>📦 Parcel Registry</h2>
+          <div class="filter-group">
+            <label for="statusFilter" class="sr-only">Filter by Status</label>
+            <select id="statusFilter" class="select-input" onchange="filterTable()">
+              <option value="ALL">All Statuses</option>
+              <option value="Registered">Pending Dispatches (Registered)</option>
+              <option value="Dispatched">Dispatched</option>
+              <option value="In Transit">In Transit</option>
+              <option value="Delivered">Delivered</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+        </div>
+        <div class="toolbar-right">
+          <div class="btn-group">
+            <button type="button" class="btn btn-secondary" onclick="sortParcels('destination')">
+              Sort by Destination <span id="sortDestIcon">⇅</span>
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="sortParcels('trackingID')">
+              Sort by ID <span id="sortIdIcon">⇅</span>
+            </button>
+          </div>
+          <button type="button" class="btn btn-benchmark" onclick="openBenchmarkModal()">
+            ⚡ Benchmark (O(N) vs O(1))
+          </button>
+          <button type="button" class="btn btn-primary" onclick="openRegisterModal()">
+            + Register Parcel
+          </button>
+        </div>
+      </div>
+
+      <!-- Responsive Data Table adhering to modern web guidance -->
+      <div tabindex="0" role="region" aria-labelledby="table-caption" class="table-wrapper">
+        <table id="parcelsTable">
+          <caption id="table-caption" class="sr-only">Directory of Registered Courier Parcels</caption>
+          <thead>
+            <tr>
+              <th scope="col">Tracking ID</th>
+              <th scope="col">Sender</th>
+              <th scope="col">Recipient</th>
+              <th scope="col">Destination</th>
+              <th scope="col">Status</th>
+              <th scope="col">Registration Date</th>
+              <th scope="col">Dispatch Date</th>
+              <th scope="col" style="text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="parcelsTableBody">
+            <!-- Dynamically populated via JS -->
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>CP Data Structures Project &bull; Courier Parcel Tracking & Dispatch System &bull; Rohit Doshi</p>
+      <p class="footer-meta">Persisted in <code>parcels.txt</code> &bull; Native C++ Backend &bull; Algorithms: MergeSort &bull; Hash Table &bull; Linear Scan</p>
+    </footer>
+  </div>
+
+  <!-- Registration Modal (Accessible <dialog closedby="any">) -->
+  <dialog id="registerModal" closedby="any" aria-labelledby="regModalTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="regModalTitle">Register New Parcel</h2>
+        <button type="button" class="btn-close" onclick="closeModal('registerModal')" aria-label="Close dialog">&times;</button>
+      </div>
+      <form id="registerForm" onsubmit="handleRegisterSubmit(event)">
+        <div class="form-group">
+          <label for="regTrackingId">Tracking ID <span class="required">*</span></label>
+          <input type="text" id="regTrackingId" required placeholder="e.g. CR111" />
+          <small class="help-text">Must be unique (no duplicate IDs allowed).</small>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="regSender">Sender Name <span class="required">*</span></label>
+            <input type="text" id="regSender" required placeholder="Full name of sender" />
+          </div>
+          <div class="form-group">
+            <label for="regRecipient">Recipient Name <span class="required">*</span></label>
+            <input type="text" id="regRecipient" required placeholder="Full name of recipient" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="regDestination">Destination City <span class="required">*</span></label>
+            <input type="text" id="regDestination" required placeholder="e.g. Mumbai, Delhi, Pune" />
+          </div>
+          <div class="form-group">
+            <label for="regDate">Registration Date</label>
+            <input type="date" id="regDate" />
+          </div>
+        </div>
+        <div id="regError" class="form-error hidden"></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('registerModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save & Register</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- Status Update Modal -->
+  <dialog id="updateModal" closedby="any" aria-labelledby="updateModalTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="updateModalTitle">Update Delivery Status</h2>
+        <button type="button" class="btn-close" onclick="closeModal('updateModal')" aria-label="Close dialog">&times;</button>
+      </div>
+      <form id="updateForm" onsubmit="handleUpdateSubmit(event)">
+        <input type="hidden" id="updateTrackingId" />
+        <div class="current-parcel-info">
+          <div>Tracking ID: <strong id="updateDisplayId">-</strong></div>
+          <div>Destination: <span id="updateDisplayDest">-</span></div>
+        </div>
+        <div class="form-group">
+          <label for="updateStatusSelect">New Status <span class="required">*</span></label>
+          <select id="updateStatusSelect" class="select-input" required onchange="handleStatusChangeInModal()">
+            <option value="Registered">Registered</option>
+            <option value="Dispatched">Dispatched</option>
+            <option value="In Transit">In Transit</option>
+            <option value="Delivered">Delivered</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div class="form-group" id="dispatchDateGroup">
+          <label for="updateDispatchDate">Dispatch Date (YYYY-MM-DD)</label>
+          <input type="date" id="updateDispatchDate" />
+          <small class="help-text">Automatically recorded when dispatched or in-transit.</small>
+        </div>
+        <div id="updateError" class="form-error hidden"></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('updateModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Update Status</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- Empirical Benchmark Modal -->
+  <dialog id="benchmarkModal" closedby="any" aria-labelledby="benchModalTitle">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h2 id="benchModalTitle">⚡ Empirical Search Complexity Benchmark</h2>
+        <button type="button" class="btn-close" onclick="closeModal('benchmarkModal')" aria-label="Close dialog">&times;</button>
+      </div>
+      <div class="benchmark-body">
+        <p class="benchmark-desc">
+          Test and compare <strong>Sequential Search O(N)</strong> vs <strong>Hash-Based Lookup O(1)</strong> across thousands of generated parcel records in the C++ backend.
+        </p>
+        <div class="benchmark-controls">
+          <div class="form-group">
+            <label for="benchSizeSelect">Dataset Size (N)</label>
+            <select id="benchSizeSelect" class="select-input">
+              <option value="1000">Small (N = 1,000 records, 1,000 queries)</option>
+              <option value="10000" selected>Medium (N = 10,000 records, 5,000 queries)</option>
+              <option value="50000">Large (N = 50,000 records, 10,000 queries)</option>
+            </select>
+          </div>
+          <button type="button" id="runBenchBtn" class="btn btn-benchmark" onclick="executeBenchmark()">
+            Run Benchmark
+          </button>
+        </div>
+
+        <div id="benchLoading" class="benchmark-loading hidden">
+          <div class="spinner"></div>
+          <span>Executing queries in native C++ engine...</span>
+        </div>
+
+        <div id="benchResults" class="benchmark-results-box hidden">
+          <div class="bench-metric-row">
+            <div class="bench-stat-card seq">
+              <h4>Sequential Search (O(N))</h4>
+              <div class="stat-number" id="benchSeqTotal">- ms</div>
+              <div class="stat-sub" id="benchSeqAvg">- µs/query</div>
+            </div>
+            <div class="bench-stat-card hash">
+              <h4>Hash-Based Lookup (O(1))</h4>
+              <div class="stat-number" id="benchHashTotal">- ms</div>
+              <div class="stat-sub" id="benchHashAvg">- µs/query</div>
+            </div>
+          </div>
+          <div class="bench-speedup-callout">
+            🚀 <strong>Speedup:</strong> Hash Lookup was <span id="benchSpeedupFactor">-</span>x faster!
+          </div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,162 +1,163 @@
 # Courier Parcel Tracking & Dispatch System
-**Data Structures & Algorithms (DSA) Mini-Project**  
+**Data Structures & Algorithms (DSA) Mini-Project with Native Web UI**  
 **Presented by:** Rohit Doshi  
-**Language:** C++17 | **Data Structures:** Vectors, Hash Index (`unordered_map`), MergeSort, File I/O  
+**Backend:** C++17 (Vectors, Hash Index `unordered_map`, MergeSort, POSIX Sockets)  
+**Frontend:** Modern Accessible Web Interface (HTML5, Responsive Tables, Container Queries, Dialogs)  
+**Storage:** Persistent Pipe-Delimited File Handling (`parcels.txt`)
 
 ---
 
 ## 📌 1. Project Context & Objectives
 
-Courier offices handle high volumes of parcels daily. Traditional register-based approaches suffer from:
-1. **Scattered Records:** Manual entries make parcel information error-prone and hard to maintain.
-2. **Slow Tracking:** Linear scanning of a long ledger causes search latency to scale linearly ($O(N)$) with volume.
+Courier offices handle high volumes of parcels daily. Traditional manual registers suffer from:
+1. **Scattered Records:** Manual entries are error-prone and hard to maintain.
+2. **Slow Tracking:** Linear scanning of a long ledger causes search latency to scale linearly ($\mathcal{O}(N)$) with volume.
 3. **Unclear Lifecycle Status:** Staff need instant visibility into which parcels are awaiting dispatch versus those in transit or delivered.
 
 ### Core Objectives
 - **Parcel Registration:** Register parcels with unique tracking IDs, sender/recipient info, destination, and booking dates.
-- **Fast Retrieval:** Retrieve parcel details in $O(1)$ average time using a hash index, comparing its performance against sequential search ($O(N)$).
+- **Fast Retrieval & Live Comparison:** Retrieve parcel details in $\mathcal{O}(1)$ average time using a hash index, comparing its performance against sequential search ($\mathcal{O}(N)$) with microsecond/nanosecond precision.
 - **Status Lifecycle Tracking:** Update parcel stages (`Registered` $\to$ `Dispatched` $\to$ `In Transit` $\to$ `Delivered` / `Cancelled`) with automated dispatch dates.
 - **Pending Dispatches:** Filter parcels awaiting dispatch (`status == "Registered"`).
-- **Sorting:** Organize parcels by **Destination** (alphabetical delivery routes) or **Tracking ID** using stable **MergeSort** ($O(N \log N)$).
+- **Sorting:** Organize parcels by **Destination** (alphabetical delivery routes) or **Tracking ID** using stable **MergeSort** ($\mathcal{O}(N \log N)$).
 - **Persistent Storage:** Automatically save and load all records to a local text file (`parcels.txt`) across program restarts.
 - **Empirical Benchmarking:** Run large-scale search benchmarks ($N = 1,000$ to $50,000+$) proving the theoretical complexity differences between Sequential Search and Hash Lookup.
+- **Modern Web Interface:** A web frontend directly powered by the C++ engine over HTTP without external frameworks.
 
 ---
 
-## 🏗️ 2. Data Structures & Architecture
+## 🏗️ 2. Dual-Mode Architecture (CLI & Native Web Server)
 
 ```
-+-------------------------------------------------------------+
-|                      USER INTERFACE                         |
-|            Interactive Console Menu (CLI / C++)             |
-+------------------------------+------------------------------+
-                               |
-                               v
-+-------------------------------------------------------------+
-|                      PARCEL MANAGER                         |
-|           Business Logic, Validation, MergeSort             |
-+--------------------+-------------------+--------------------+
-                     |                   |
-                     v                   v
-+-----------------------------+ +-----------------------------+
-|       RECORD STORAGE        | |         HASH INDEX          |
-|    std::vector<Parcel>      | |  std::unordered_map<ID,idx> |
-|  Full in-memory records     | |  Maps ID to vector index    |
-+--------------+--------------+ +-----------------------------+
-               |
-               v
-+-----------------------------+
-|     PERSISTENT STORAGE      |
-|         parcels.txt         |
-|  Pipe-delimited text format |
-+-----------------------------+
-```
-
-### The Parcel Data Model
-```cpp
-struct Parcel {
-    std::string trackingID;      // Unique parcel identifier (e.g. CR101)
-    std::string sender;          // Sender name
-    std::string recipient;       // Recipient name
-    std::string destination;     // Delivery city (e.g. Mumbai)
-    std::string status;          // "Registered", "Dispatched", "In Transit", "Delivered", "Cancelled"
-    std::string registrationDate;// Booking date (YYYY-MM-DD)
-    std::string dispatchDate;    // Dispatch date (YYYY-MM-DD or "-")
-};
-```
-
-### File Delimited Format (`parcels.txt`)
-```
-trackingID | sender | recipient | destination | status | registrationDate | dispatchDate
-```
-*Example:*
-```
-CR101 | Amit Sharma | Neha Patel | Mumbai | Registered | 2026-10-16 | -
-CR102 | Rajesh Kumar | Priya Singh | Delhi | Dispatched | 2026-10-15 | 2026-10-17
++---------------------------------------------------------------------------------+
+|                                 USER INTERFACES                                 |
+|     1. Interactive CLI Console Menu   OR    2. Modern Responsive Web Browser     |
++------------------------+---------------------------------------+----------------+
+                         |                                       |
+                         | (Direct C++ Function Calls)           | (HTTP / REST API via POSIX Sockets)
+                         v                                       v
++---------------------------------------------------------------------------------+
+|                                C++ BACKEND CORE                                 |
+|                       WebServer (POSIX Sockets / HTTP 1.1)                      |
+|                       ParcelManager (Business Logic & Validation)               |
++----------------------------------------+----------------------------------------+
+                                         |
+                     +-------------------+-------------------+
+                     |                                       |
+                     v                                       v
++-----------------------------------------+ +-------------------------------------+
+|             RECORD STORAGE              | |             HASH INDEX              |
+|          std::vector<Parcel>            | |    std::unordered_map<ID, size_t>   |
+|   Contiguous memory for all records     | |   Maps Tracking ID to Vector Index  |
++--------------------+--------------------+ +-------------------------------------+
+                     |
+                     v
++-----------------------------------------+
+|           PERSISTENT STORAGE            |
+|               parcels.txt               |
+|      Pipe-delimited records format      |
++-----------------------------------------+
 ```
 
 ---
 
-## ⚡ 3. Algorithm Analysis: Sequential Search vs Hash Lookup
+## 🌐 3. Web Interface Features
 
-| Operation | Algorithm / Mechanism | Typical Time | Worst-Case Time | Space Complexity | Why? |
+The web frontend located in `/web` provides an intuitive experience:
+1. **Live Metrics Bar:** Instant count of Total Parcels, Pending Dispatches, In Transit, and Delivered items.
+2. **Interactive Search & Algorithm Comparison:**
+   - Real-time side-by-side comparison between **Sequential Search ($\mathcal{O}(N)$)** and **Hash-Based Lookup ($\mathcal{O}(1)$)**.
+   - Displays number of checks/steps, elapsed execution time in nanoseconds/microseconds, and speedup ratio.
+   - Visual **Lifecycle Stepper** showing stage progression (`Registered ➔ Dispatched ➔ In Transit ➔ Delivered`).
+3. **Responsive Parcel Registry Table:**
+   - Adheres to web standards: sticky headers (`position: sticky; inset-block-start: 0`), container query scaling, and keyboard accessibility (`role="region"`, `tabindex="0"`).
+   - Instant sorting by Destination or Tracking ID using the C++ MergeSort engine.
+   - Filtering by status (e.g. view only Pending Dispatches).
+4. **Accessible Modal Dialogs:**
+   - Registration and status update forms built with HTML5 `<dialog closedby="any">` and backdrop blur.
+5. **Empirical Benchmark Runner Modal:**
+   - Select dataset size ($N = 1,000$, $10,000$, or $50,000$) and run thousands of queries inside the C++ backend with live progress visualization.
+
+---
+
+## ⚡ 4. Algorithmic Complexity Analysis
+
+| Operation | Algorithm / Mechanism | Typical Time | Worst-Case Time | Space Complexity | Implementation Detail |
 | :--- | :--- | :---: | :---: | :---: | :--- |
-| **Sequential Search** | Linear Scan over `vector<Parcel>` | $\mathcal{O}(N)$ | $\mathcal{O}(N)$ | $\mathcal{O}(1)$ | Must inspect elements one-by-one from index 0 to $N-1$. |
-| **Hash-Based Lookup** | `std::unordered_map<ID, size_t>` | $\mathcal{O}(1)$ avg | $\mathcal{O}(N)$ | $\mathcal{O}(N)$ | Computes hash bucket directly; worst-case occurs only on extreme hash collisions. |
+| **Sequential Search** | Linear Scan over `vector<Parcel>` | $\mathcal{O}(N)$ | $\mathcal{O}(N)$ | $\mathcal{O}(1)$ | Iterates indices 0 to $N-1$ until match. |
+| **Hash-Based Lookup** | `std::unordered_map<ID, size_t>` | $\mathcal{O}(1)$ avg | $\mathcal{O}(N)$ | $\mathcal{O}(N)$ | Instant bucket computation; $\mathcal{O}(N)$ only on pathological collisions. |
 | **Sorting** | Custom stable MergeSort | $\mathcal{O}(N \log N)$ | $\mathcal{O}(N \log N)$ | $\mathcal{O}(N)$ | Divide-and-conquer; rebuilds hash index after permutation. |
-| **Pending Filter** | Vector scan (`status == Registered`) | $\mathcal{O}(N)$ | $\mathcal{O}(N)$ | $\mathcal{O}(K)$ | Visits each record once to filter pending parcels. |
-| **File Persistence** | Stream I/O (`parcels.txt`) | $\mathcal{O}(N)$ | $\mathcal{O}(N)$ | $\mathcal{O}(1)$ auxiliary | Line-by-line serialization and deserialization. |
-
-### Theoretical Comparison
-1. **Sequential Search:** Checks up to $N$ records before locating the target or determining absence. Average checks: $N / 2$.
-2. **Hash-Based Lookup:** Directly computes the hash of `trackingID` to find the vector index in constant time. In practice, hash lookup is **25x to 2,500x faster** as dataset size scales.
+| **Pending Filter** | Vector scan (`status == Registered`) | $\mathcal{O}(N)$ | $\mathcal{O}(N)$ | $\mathcal{O}(K)$ | Inspects each record to extract pending queue. |
+| **File Persistence** | Stream I/O (`parcels.txt`) | $\mathcal{O}(N)$ | $\mathcal{O}(N)$ | $\mathcal{O}(1)$ auxiliary | Pipe-delimited serialization & deserialization. |
 
 ---
 
-## 🚀 4. Compilation & Execution
+## 🚀 5. How to Run
 
-### Prerequisites
-- GCC / G++ supporting C++17
-- Linux / macOS / Windows (MinGW or WSL)
+### Option 1: Start the Web Server (Recommended)
+You can launch the web server directly using `make`, the C++ binary, or Python:
 
-### Option A: Using the Makefile (Modular Build)
 ```bash
-# Build the project
-make
+# Using Make (starts on port 5000)
+make web
 
-# Run the interactive program
-make run
+# Or using the C++ binary directly on any custom port
+./bin/courier_tracker --web 5000
 
-# Run the automated demo test suite
-make test
-
-# Clean build artifacts
-make clean
+# Or using the Python launcher
+python3 server.py 5000
 ```
+Open your browser and navigate to: **`http://localhost:5000/`**
 
-### Option B: Compiling the Standalone Single File
-If your teacher or lab examiner prefers a single `.cpp` file:
+---
+
+### Option 2: Run the Terminal CLI Menu
 ```bash
-# Compile
+# Compile and run interactive CLI
+make run
+```
+Menu option `9` also allows launching the web server directly from within the CLI!
+
+---
+
+### Option 3: Compile the Single-File Version
+If your professor or examiner prefers a single `.cpp` file:
+```bash
 g++ -std=c++17 -O2 courier_tracker.cpp -o bin/courier_tracker
 
-# Run
+# Run CLI
 ./bin/courier_tracker
+
+# Or run Web Server
+./bin/courier_tracker --web 5000
 ```
 
 ---
 
-## 📋 5. Live Demonstration Plan (Slide 11 Walkthrough)
-
-Follow these steps for a 2–3 minute examiner walkthrough:
-
-| Step | Action | Menu Choice | Details to Enter | Verification Check |
-| :---: | :--- | :---: | :--- | :--- |
-| **01** | **Register** | `1` | ID: `CR101`, Sender: `Amit Sharma`, Recipient: `Neha Patel`, Dest: `Mumbai` | Enforces unique ID; rejects duplicate if re-entered. |
-| **02** | **Search** | `2` | ID: `CR101` | Displays side-by-side search comparison (Sequential vs Hash) + Parcel Card. |
-| **03** | **Update** | `3` | ID: `CR101`, Status: `2` (Dispatched), Date: `2026-10-20` | Updates status and persists dispatch date. |
-| **04** | **Filter** | `4` | View Pending Dispatches | Displays all parcels where `status == "Registered"`. |
-| **05** | **Sort** | `5` | Criterion: `1` (Destination), Order: `1` (Ascending) | Records ordered alphabetically by destination city. |
-| **06** | **Restart** | `9` then `./bin/courier_tracker` | Choose `6` (Display All) | Verifies all updates survived shutdown via `parcels.txt`. |
+### Run All Automated Verification Tests
+```bash
+make test
+```
+This runs both:
+- `tests/test_demo.sh`: Validates the 6-step live demo walkthrough from Slide 11.
+- `tests/test_web.sh`: Validates all HTTP endpoints, JSON API, and static asset delivery.
 
 ---
 
-## 📊 6. Empirical Benchmark Results
+## 📡 6. REST API Endpoints
 
-Running the built-in benchmark runner (Option `7` in the menu) yields empirical proof:
+The native C++ web server exposes the following REST endpoints:
 
-```
-========================================================================================
-                   EMPIRICAL BENCHMARK RESULTS (N = 10,000, Queries = 5,000)             
-========================================================================================
-Algorithm                Total Time (ms)Avg Time/Query    Theoretical    Items Located  
-----------------------------------------------------------------------------------------
-Sequential Search        124.50         24.9000 us        O(N)           5000           
-Hash-Based Lookup        0.22           0.0440 us         O(1) average   5000           
-========================================================================================
- SPEEDUP FACTOR: Hash Lookup is 565.9x FASTER than Sequential Search on 10,000 records!
-========================================================================================
-```
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/` | Serves the web dashboard (`web/index.html`) |
+| `GET` | `/api/parcels` | Returns JSON array of all registered parcels |
+| `GET` | `/api/pending` | Returns JSON array of parcels awaiting dispatch |
+| `GET` | `/api/search?id=CR101` | Executes sequential & hash search, returns times, step counts, and parcel |
+| `POST`| `/api/register` | Registers a new parcel, enforces unique ID, saves to `parcels.txt` |
+| `POST`| `/api/update-status` | Updates delivery status and dispatch date, saves to `parcels.txt` |
+| `GET` | `/api/sort?by=destination&order=asc` | Sorts records via C++ MergeSort and returns ordered records |
+| `GET` | `/api/benchmark?n=10000&q=5000` | Generates $N$ records, executes $Q$ queries, returns speedup metrics |
 
 ---
 
@@ -166,15 +167,23 @@ Hash-Based Lookup        0.22           0.0440 us         O(1) average   5000
 dsaminiproject/
 ├── include/
 │   ├── Parcel.h              # Parcel entity definition & constants
-│   └── ParcelManager.h       # ParcelManager declarations & API
+│   ├── ParcelManager.h       # Manager class declarations & algorithms
+│   └── WebServer.h           # POSIX socket HTTP server header
 ├── src/
 │   ├── ParcelManager.cpp     # File I/O, hash indexing, MergeSort & benchmarking
-│   └── main.cpp              # Interactive menu-driven console UI
-├── courier_tracker.cpp       # Standalone all-in-one source file
-├── parcels.txt               # Persistent database file
-├── Makefile                  # Automated build configurations
+│   ├── WebServer.cpp         # Native C++ HTTP server & REST API
+│   └── main.cpp              # CLI menu & CLI/Web dispatcher
+├── web/
+│   ├── index.html            # Modern responsive web dashboard
+│   ├── style.css             # Responsive table, dialogs, design tokens
+│   └── app.js                # Frontend controller communicating with C++ API
+├── courier_tracker.cpp       # Standalone all-in-one C++ file
+├── server.py                 # Optional Python launcher
+├── parcels.txt               # Persistent text database
+├── Makefile                  # Build targets (all, run, web, single, test, clean)
 ├── tests/
-│   └── test_demo.sh          # Automated test suite for the 6-step walkthrough
+│   ├── test_demo.sh          # Slide 11 walkthrough test suite
+│   └── test_web.sh           # Web and API test suite
 └── README.md                 # Project documentation
 ```
 

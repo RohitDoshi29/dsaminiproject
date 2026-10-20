@@ -24,7 +24,7 @@ EOF
 echo "[Step 1] Testing Parcel Registration (CR101 for Mumbai) & Duplicate Rejection..."
 # 1: Register CR101
 # 1: Attempt duplicate register CR101 (should reject)
-# 9: Exit
+# 10: Exit
 ./bin/courier_tracker << 'EOF'
 1
 CR101
@@ -34,7 +34,7 @@ Mumbai
 2026-10-16
 1
 CR101
-9
+10
 EOF
 
 echo "[Check 1] Verifying CR101 was saved to parcels.txt..."
@@ -46,7 +46,7 @@ echo "[Step 2] Testing Search (Sequential vs Hash) & Status Update (CR101 -> Dis
 # 3: Update CR101 to Dispatched (option 2), enter dispatch date 2026-10-20
 # 4: Display pending dispatches
 # 5: Sort by Destination (1), Ascending (1)
-# 9: Exit
+# 10: Exit
 ./bin/courier_tracker << 'EOF'
 2
 CR101
@@ -58,7 +58,7 @@ CR101
 5
 1
 1
-9
+10
 EOF
 
 echo "[Check 2] Verifying status update to Dispatched in parcels.txt..."
@@ -66,12 +66,12 @@ grep -q "CR101 | Amit Sharma | Neha Patel | Mumbai | Dispatched | 2026-10-16 | 2
 echo " -> Status update and dispatch date verified in persistent storage!"
 
 echo "[Step 3] Testing Persistence Across Program Restart & Benchmark..."
-# Re-run program, display all (6), run small benchmark (7, option 1), exit (9)
+# Re-run program, display all (6), run small benchmark (7, option 1), exit (10)
 ./bin/courier_tracker << 'EOF'
 6
 7
 1
-9
+10
 EOF
 
 echo "======================================================================"
@@ -95,3 +95,4 @@ EOF
 if [ -f parcels.txt.bak ]; then
     rm -f parcels.txt.bak
 fi
+
