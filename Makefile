@@ -27,9 +27,12 @@ $(BUILD_DIR):
 $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
 
-# Single file build target
+# Single file build targets
 single: courier_tracker.cpp | $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) courier_tracker.cpp -o $(TARGET)
+
+system: courier_system.cpp | $(BIN_DIR)
+	$(CXX) $(CXXFLAGS) courier_system.cpp -o $(BIN_DIR)/courier_system
 
 run: all
 	./$(TARGET)

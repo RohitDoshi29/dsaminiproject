@@ -8,3 +8,4 @@ CR104 | Sunil Verma | Pooja Joshi | Pune | Registered | 2026-10-17 | -
 CR103 | Vikram Mehta | Ananya Das | Bangalore | In Transit | 2026-10-14 | 2026-10-15
 CR102 | Rajesh Kumar | Priya Singh | Delhi | Dispatched | 2026-10-15 | 2026-10-17
 CR101 | Amit Sharma | Neha Patel | Mumbai | Registered | 2026-10-16 | -
+CR1000 | Rohit | smit | pune | In Transit | 2026-10-23 | 2026-10-25
