@@ -65,9 +65,17 @@ echo "[Check 2] Verifying status update to Dispatched in parcels.txt..."
 grep -q "CR101 | Amit Sharma | Neha Patel | Mumbai | Dispatched | 2026-10-16 | 2026-10-20" parcels.txt
 echo " -> Status update and dispatch date verified in persistent storage!"
 
-echo "[Step 3] Testing Persistence Across Program Restart & Benchmark..."
-# Re-run program, display all (6), run small benchmark (7, option 1), exit (10)
+echo "[Step 3] Testing Sorting, Save & Reload, and Benchmark..."
+# 5: Sort by Tracking ID (2), Descending (2)
+# 8: Save & Reload records
+# 6: Display all
+# 7: Benchmark (option 1)
+# 10: Exit
 ./bin/courier_tracker << 'EOF'
+5
+2
+2
+8
 6
 7
 1

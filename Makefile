@@ -11,7 +11,7 @@ OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SRCS))
 
 PORT ?= 5000
 
-.PHONY: all clean run web single test
+.PHONY: all clean run web single test unit
 
 all: $(TARGET)
 
@@ -37,7 +37,15 @@ run: all
 web: all
 	./$(TARGET) --web $(PORT)
 
-test: all
+TEST_TARGET := $(BIN_DIR)/unit_tests
+
+unit: $(TEST_TARGET)
+	./$(TEST_TARGET)
+
+$(TEST_TARGET): tests/unit_tests.cpp $(SRC_DIR)/ParcelManager.cpp | $(BIN_DIR)
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
+test: all unit
 	bash tests/test_demo.sh
 	bash tests/test_web.sh
 
